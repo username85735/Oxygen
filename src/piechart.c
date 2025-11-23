@@ -107,19 +107,20 @@ static void calculate_slices(void) {
         slices[i].end_angle = current_angle + angle_span;
         slices[i].mid_angle = current_angle + angle_span / 2;
 
-        // Determine if slice is large enough for internal label (>10%)
-        slices[i].use_external_label = (slices[i].percentage < 10);
+        // Determine if slice is large enough for internal label (>12%)
+        slices[i].use_external_label = (slices[i].percentage < 12);
 
         // Calculate label position using integer trig
         int16_t angle = slices[i].mid_angle - 90;  // -90 to rotate to 12 o'clock start
 
         if (slices[i].use_external_label) {
-            // Position label outside the pie
-            slices[i].label_x = CHART_CENTER_X + ((fast_cos(angle) * (CHART_RADIUS + 20)) / 256);
-            slices[i].label_y = CHART_CENTER_Y + ((fast_sin(angle) * (CHART_RADIUS + 20)) / 256);
+            // Position label outside the pie - further out for readability
+            int16_t outer_dist = CHART_RADIUS + 30;
+            slices[i].label_x = CHART_CENTER_X + ((fast_cos(angle) * outer_dist) / 256);
+            slices[i].label_y = CHART_CENTER_Y + ((fast_sin(angle) * outer_dist) / 256);
         } else {
-            // Position label inside the pie (60% of radius)
-            int16_t inner_radius = (CHART_RADIUS * 6) / 10;
+            // Position label inside the pie (55% of radius for better centering)
+            int16_t inner_radius = (CHART_RADIUS * 55) / 100;
             slices[i].label_x = CHART_CENTER_X + ((fast_cos(angle) * inner_radius) / 256);
             slices[i].label_y = CHART_CENTER_Y + ((fast_sin(angle) * inner_radius) / 256);
         }
@@ -135,30 +136,41 @@ static void draw_slice(uint8_t index) {
 
     gfx_SetColor(color);
 
-    // Draw filled wedge using triangles
+    // Draw filled wedge using triangles with 1-degree increments for smoothness
     int16_t start = slice->start_angle - 90;  // Rotate to 12 o'clock start
     int16_t end = slice->end_angle - 90;
 
-    // Draw filled arc segments by drawing multiple triangles
-    for (int16_t angle = start; angle < end; angle += 2) {
+    // Draw filled arc segments
+    for (int16_t angle = start; angle < end; angle++) {
         int16_t x1 = CHART_CENTER_X + ((fast_cos(angle) * CHART_RADIUS) / 256);
         int16_t y1 = CHART_CENTER_Y + ((fast_sin(angle) * CHART_RADIUS) / 256);
-        int16_t x2 = CHART_CENTER_X + ((fast_cos(angle + 2) * CHART_RADIUS) / 256);
-        int16_t y2 = CHART_CENTER_Y + ((fast_sin(angle + 2) * CHART_RADIUS) / 256);
+        int16_t x2 = CHART_CENTER_X + ((fast_cos(angle + 1) * CHART_RADIUS) / 256);
+        int16_t y2 = CHART_CENTER_Y + ((fast_sin(angle + 1) * CHART_RADIUS) / 256);
 
         gfx_FillTriangle(CHART_CENTER_X, CHART_CENTER_Y, x1, y1, x2, y2);
     }
 
-    // Draw outline
+    // Draw outline - black radial lines at slice boundaries only
     gfx_SetColor(COLOR_TEXT);
     int16_t x_start = CHART_CENTER_X + ((fast_cos(start) * CHART_RADIUS) / 256);
     int16_t y_start = CHART_CENTER_Y + ((fast_sin(start) * CHART_RADIUS) / 256);
     int16_t x_end = CHART_CENTER_X + ((fast_cos(end) * CHART_RADIUS) / 256);
     int16_t y_end = CHART_CENTER_Y + ((fast_sin(end) * CHART_RADIUS) / 256);
 
-    // Draw lines from center to edge
+    // Draw radial lines from center to edge
     gfx_Line(CHART_CENTER_X, CHART_CENTER_Y, x_start, y_start);
     gfx_Line(CHART_CENTER_X, CHART_CENTER_Y, x_end, y_end);
+
+    // Draw the arc perimeter for this slice
+    int16_t prev_x = x_start;
+    int16_t prev_y = y_start;
+    for (int16_t angle = start + 1; angle <= end; angle++) {
+        int16_t x = CHART_CENTER_X + ((fast_cos(angle) * CHART_RADIUS) / 256);
+        int16_t y = CHART_CENTER_Y + ((fast_sin(angle) * CHART_RADIUS) / 256);
+        gfx_Line(prev_x, prev_y, x, y);
+        prev_x = x;
+        prev_y = y;
+    }
 }
 
 // Draw connecting line for external labels
@@ -179,30 +191,60 @@ static void draw_label_line(uint8_t index) {
 // Draw slice label
 static void draw_label(uint8_t index) {
     SliceInfo *slice = &slices[index];
-    char text[16];
-
-    if (slice->use_external_label) {
-        // External: show full label
-        sprintf(text, "%s %d%%", labels[index], slice->percentage);
-    } else {
-        // Internal: show percentage only or abbreviated label
-        if (slice->percentage >= 15) {
-            sprintf(text, "%s\n%d%%", labels[index], slice->percentage);
-        } else {
-            sprintf(text, "%d%%", slice->percentage);
-        }
-    }
+    char line1[16];
+    char line2[16];
+    bool two_lines = false;
 
     gfx_SetTextFGColor(COLOR_TEXT);
-    gfx_SetTextBGColor(COLOR_BG);
     gfx_SetTextTransparentColor(COLOR_BG);
 
-    // Center text on label position
-    uint8_t text_width = gfx_GetStringWidth(text);
-    int16_t text_x = slice->label_x - text_width / 2;
-    int16_t text_y = slice->label_y - 4;
+    if (slice->use_external_label) {
+        // External: show full label on one line
+        sprintf(line1, "%s %d%%", labels[index], slice->percentage);
 
-    gfx_PrintStringXY(text, text_x, text_y);
+        uint8_t text_width = gfx_GetStringWidth(line1);
+        int16_t text_x = slice->label_x - text_width / 2;
+        int16_t text_y = slice->label_y - 4;
+
+        // Bounds checking
+        if (text_x < 0) text_x = 2;
+        if (text_x + text_width > 320) text_x = 320 - text_width - 2;
+        if (text_y < 30) text_y = 30;
+        if (text_y > 230) text_y = 230;
+
+        gfx_PrintStringXY(line1, text_x, text_y);
+    } else {
+        // Internal: show label and percentage
+        if (slice->percentage >= 15) {
+            // Two lines for larger slices
+            sprintf(line1, "%s", labels[index]);
+            sprintf(line2, "%d%%", slice->percentage);
+            two_lines = true;
+        } else {
+            // Just percentage for smaller slices
+            sprintf(line1, "%d%%", slice->percentage);
+        }
+
+        if (two_lines) {
+            // Draw first line
+            uint8_t width1 = gfx_GetStringWidth(line1);
+            int16_t x1 = slice->label_x - width1 / 2;
+            int16_t y1 = slice->label_y - 8;
+            gfx_PrintStringXY(line1, x1, y1);
+
+            // Draw second line
+            uint8_t width2 = gfx_GetStringWidth(line2);
+            int16_t x2 = slice->label_x - width2 / 2;
+            int16_t y2 = slice->label_y + 1;
+            gfx_PrintStringXY(line2, x2, y2);
+        } else {
+            // Single line
+            uint8_t text_width = gfx_GetStringWidth(line1);
+            int16_t text_x = slice->label_x - text_width / 2;
+            int16_t text_y = slice->label_y - 4;
+            gfx_PrintStringXY(line1, text_x, text_y);
+        }
+    }
 }
 
 // Draw the complete pie chart
