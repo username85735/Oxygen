@@ -88,9 +88,6 @@ static void draw_bars(void)
 
         // Draw outline for crisp look
         gfx_SetColor(COLOR_BAR_OUTLINE);
-        // Top rounded corners
-        gfx_Circle(x + corner_radius, y + corner_radius, corner_radius);
-        gfx_Circle(x + bar_width - corner_radius - 1, y + corner_radius, corner_radius);
         // Top line
         gfx_HorizLine(x + corner_radius, y, bar_width - 2 * corner_radius);
         // Side lines
