@@ -106,11 +106,11 @@ static void draw_bars(void)
         // Draw outline with smooth arcs for rounded corners
         gfx_SetColor(bar_outline_colors[i]);
 
-        // Left rounded corner arc (90-180 degrees)
-        oxy_Arc(x + corner_radius, y + corner_radius, corner_radius, 90, 180);
+        // Left rounded corner arc (top-left quarter circle)
+        oxy_Arc(x + corner_radius, y + corner_radius, corner_radius, 180, 270);
 
-        // Right rounded corner arc (0-90 degrees)
-        oxy_Arc(x + bar_width - corner_radius - 1, y + corner_radius, corner_radius, 0, 90);
+        // Right rounded corner arc (top-right quarter circle)
+        oxy_Arc(x + bar_width - corner_radius - 1, y + corner_radius, corner_radius, 270, 360);
 
         // Top line (between the arcs)
         gfx_HorizLine(x + corner_radius, y, bar_width - 2 * corner_radius - 1);
