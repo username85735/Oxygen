@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <time.h>
 
 #include "oxygen/oxygen.h"
 
@@ -12,6 +14,7 @@
 static uint8_t num_bars = 6;
 static char labels[MAX_BARS][4] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 static uint8_t data[MAX_BARS] = {45, 72, 38, 91, 55, 68, 60, 82, 48, 75, 65, 88};
+static bool axis_break_enabled = false;
 
 // Chart dimensions
 #define CHART_X 30
@@ -46,6 +49,24 @@ static const uint8_t bar_outline_colors[] = {
     18    // Dark blue
 };
 
+static void randomize_data(void)
+{
+    // Generate random values between 10 and 100
+    for (uint8_t i = 0; i < MAX_BARS; i++) {
+        data[i] = 10 + (rand() % 91);
+    }
+}
+
+static void draw_zigzag(uint16_t x, uint8_t y, uint8_t width)
+{
+    // Draw zigzag axis break indicator
+    gfx_SetColor(COLOR_AXIS);
+    for (uint8_t i = 0; i < width; i += 4) {
+        gfx_Line(x + i, y, x + i + 2, y + 3);
+        gfx_Line(x + i + 2, y + 3, x + i + 4, y);
+    }
+}
+
 static void draw_chart_frame(void)
 {
     // Draw title
@@ -58,27 +79,51 @@ static void draw_chart_frame(void)
     // Draw axis lines
     gfx_SetColor(COLOR_AXIS);
     gfx_HorizLine(CHART_X, CHART_Y + CHART_HEIGHT, CHART_WIDTH);  // X-axis
-    gfx_VertLine(CHART_X, CHART_Y, CHART_HEIGHT);                  // Y-axis
+
+    // Y-axis with optional break
+    if (axis_break_enabled) {
+        // Draw Y-axis in two segments with zigzag break
+        uint8_t break_y = CHART_Y + 20;
+        gfx_VertLine(CHART_X, CHART_Y, 15);  // Top segment
+        gfx_VertLine(CHART_X, break_y + 10, CHART_HEIGHT - 30);  // Bottom segment
+        draw_zigzag(CHART_X - 2, break_y, 5);  // Zigzag indicator
+    } else {
+        gfx_VertLine(CHART_X, CHART_Y, CHART_HEIGHT);  // Full Y-axis
+    }
 
     // Draw horizontal grid lines
     gfx_SetColor(COLOR_GRID);
     for (uint8_t i = 1; i <= 4; i++) {
         uint8_t y = CHART_Y + (CHART_HEIGHT * i) / 5;
-        for (uint16_t x = CHART_X + 1; x < CHART_X + CHART_WIDTH; x += 3) {
-            gfx_SetPixel(x, y);
+        // Skip grid line in break area if enabled
+        if (!axis_break_enabled || y < CHART_Y + 20 || y > CHART_Y + 30) {
+            for (uint16_t x = CHART_X + 1; x < CHART_X + CHART_WIDTH; x += 3) {
+                gfx_SetPixel(x, y);
+            }
         }
     }
 
-    // Draw Y-axis labels (0-100)
+    // Draw Y-axis labels
     gfx_SetTextFGColor(COLOR_LABEL);
     char buffer[4];
-    for (uint8_t i = 0; i <= 5; i++) {
-        uint8_t value = (5 - i) * 20;
-        uint8_t y = CHART_Y + (CHART_HEIGHT * i) / 5;
-        sprintf(buffer, "%d", value);
-        // Adjust x position based on number of digits
-        uint8_t label_x = (value == 100) ? CHART_X - 24 : CHART_X - 16;
-        gfx_PrintStringXY(buffer, label_x, y - 4);
+    if (axis_break_enabled) {
+        // Compressed scale: 0-40, break, 60-100
+        const uint8_t labels_vals[] = {100, 80, 40, 20, 0};
+        for (uint8_t i = 0; i < 5; i++) {
+            uint8_t y = CHART_Y + (CHART_HEIGHT * i) / 5;
+            sprintf(buffer, "%d", labels_vals[i]);
+            uint8_t label_x = (labels_vals[i] == 100) ? CHART_X - 24 : CHART_X - 16;
+            gfx_PrintStringXY(buffer, label_x, y - 4);
+        }
+    } else {
+        // Normal 0-100 scale
+        for (uint8_t i = 0; i <= 5; i++) {
+            uint8_t value = (5 - i) * 20;
+            uint8_t y = CHART_Y + (CHART_HEIGHT * i) / 5;
+            sprintf(buffer, "%d", value);
+            uint8_t label_x = (value == 100) ? CHART_X - 24 : CHART_X - 16;
+            gfx_PrintStringXY(buffer, label_x, y - 4);
+        }
     }
 }
 
@@ -180,12 +225,16 @@ static void draw_legend(void)
     // Draw interactive controls
     gfx_SetTextFGColor(COLOR_LABEL);
     gfx_SetTextBGColor(COLOR_BACKGROUND);
-    gfx_PrintStringXY("[+] Add  [(-)] Remove  [CLEAR] Exit", 10, LCD_HEIGHT - 12);
+    gfx_PrintStringXY("[+] Add [(-)] Remove [ENTER] Random", 10, LCD_HEIGHT - 20);
+    gfx_PrintStringXY("[GRAPH] Toggle Break  [CLEAR] Exit", 10, LCD_HEIGHT - 10);
 }
 
 int main(void)
 {
     bool needs_redraw = true;
+
+    // Seed random number generator
+    srand(rtc_Time());
 
     // Initialize graphics
     gfx_Begin();
@@ -195,24 +244,36 @@ int main(void)
     while (!(kb_Data[6] & kb_Clear)) {
         kb_Scan();
 
-        // Handle + key (add bar) - using kb_IsDown for reliability
+        // Handle + key (add bar)
         if (kb_IsDown(kb_KeyAdd)) {
             if (num_bars < MAX_BARS) {
                 num_bars++;
                 needs_redraw = true;
-                // Wait for key release
                 while (kb_IsDown(kb_KeyAdd)) kb_Scan();
             }
         }
 
-        // Handle - key (remove bar) - trying negative key
+        // Handle - key (remove bar)
         if (kb_IsDown(kb_KeyChs)) {
             if (num_bars > 1) {
                 num_bars--;
                 needs_redraw = true;
-                // Wait for key release
                 while (kb_IsDown(kb_KeyChs)) kb_Scan();
             }
+        }
+
+        // Handle ENTER key (randomize data)
+        if (kb_Data[6] & kb_Enter) {
+            randomize_data();
+            needs_redraw = true;
+            while (kb_Data[6] & kb_Enter) kb_Scan();
+        }
+
+        // Handle GRAPH key (toggle axis break)
+        if (kb_Data[1] & kb_Graph) {
+            axis_break_enabled = !axis_break_enabled;
+            needs_redraw = true;
+            while (kb_Data[1] & kb_Graph) kb_Scan();
         }
 
         // Redraw chart if needed
