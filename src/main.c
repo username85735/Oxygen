@@ -22,10 +22,27 @@ static const uint8_t data[] = {45, 72, 38, 91, 55, 68};
 #define COLOR_BACKGROUND 255    // White
 #define COLOR_TITLE 0           // Black
 #define COLOR_AXIS 1            // Dark gray
-#define COLOR_BAR_FILL 224      // Blue
-#define COLOR_BAR_OUTLINE 18    // Dark blue
 #define COLOR_LABEL 0           // Black
 #define COLOR_GRID 252          // Light gray
+
+// Pastel color palette for bars (distinct, vibrant pastels)
+static const uint8_t bar_colors[] = {
+    224,  // Light blue
+    227,  // Coral/salmon
+    151,  // Mint green
+    220,  // Lavender
+    228,  // Peach
+    148   // Sky blue
+};
+
+static const uint8_t bar_outline_colors[] = {
+    18,   // Dark blue
+    19,   // Dark coral
+    4,    // Dark green
+    17,   // Dark purple
+    20,   // Dark orange
+    18    // Dark blue
+};
 
 static void draw_chart_frame(void)
 {
@@ -75,24 +92,33 @@ static void draw_bars(void)
         uint8_t y = CHART_Y + CHART_HEIGHT - bar_height;
 
         // Draw bar with rounded top and flat bottom
-        uint8_t corner_radius = 3;
+        uint8_t corner_radius = 4;
 
         // Fill main rectangle (flat bottom)
-        gfx_SetColor(COLOR_BAR_FILL);
+        gfx_SetColor(bar_colors[i]);
         gfx_FillRectangle(x, y + corner_radius, bar_width, bar_height - corner_radius);
 
         // Fill rounded top
         gfx_FillCircle(x + corner_radius, y + corner_radius, corner_radius);
         gfx_FillCircle(x + bar_width - corner_radius - 1, y + corner_radius, corner_radius);
-        gfx_FillRectangle(x + corner_radius, y, bar_width - 2 * corner_radius, corner_radius);
+        gfx_FillRectangle(x + corner_radius, y, bar_width - 2 * corner_radius, corner_radius + 1);
 
-        // Draw outline for crisp look
-        gfx_SetColor(COLOR_BAR_OUTLINE);
-        // Top line
-        gfx_HorizLine(x + corner_radius, y, bar_width - 2 * corner_radius);
+        // Draw outline with smooth arcs for rounded corners
+        gfx_SetColor(bar_outline_colors[i]);
+
+        // Left rounded corner arc (90-180 degrees)
+        oxy_Arc(x + corner_radius, y + corner_radius, corner_radius, 90, 180);
+
+        // Right rounded corner arc (0-90 degrees)
+        oxy_Arc(x + bar_width - corner_radius - 1, y + corner_radius, corner_radius, 0, 90);
+
+        // Top line (between the arcs)
+        gfx_HorizLine(x + corner_radius, y, bar_width - 2 * corner_radius - 1);
+
         // Side lines
         gfx_VertLine(x, y + corner_radius, bar_height - corner_radius);
         gfx_VertLine(x + bar_width - 1, y + corner_radius, bar_height - corner_radius);
+
         // Bottom line (flat)
         gfx_HorizLine(x, y + bar_height - 1, bar_width);
 
