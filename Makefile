@@ -2,9 +2,9 @@
 # Program Options
 # ----------------------------
 
-NAME         ?= BARCHART
+NAME         ?= PIECHART
 ICON         ?= icon.png
-DESCRIPTION  ?= "Bar Chart Demo"
+DESCRIPTION  ?= "Pie Chart Demo"
 COMPRESSED   ?= YES
 ARCHIVED     ?= NO
 
