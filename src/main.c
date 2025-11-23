@@ -108,13 +108,11 @@ static void draw_bars(void)
             gfx_FillRectangle(x, y + corner_radius, bar_width, bar_height - corner_radius);
         }
 
-        // Fill rounded top with proper overlap to prevent gaps
-        // Use radius - 1 for fills to stay inside the outline
-        uint8_t fill_radius = (corner_radius > 1) ? corner_radius - 1 : 1;
-        gfx_FillCircle(x + corner_radius, y + corner_radius, fill_radius);
-        gfx_FillCircle(x + bar_width - corner_radius - 1, y + corner_radius, fill_radius);
-        // Rectangle width adjusted to connect circles properly (+2 for overlap)
-        gfx_FillRectangle(x + corner_radius, y, bar_width - 2 * corner_radius + 2, fill_radius + 1);
+        // Fill rounded top - use full radius to ensure complete coverage under outline
+        gfx_FillCircle(x + corner_radius, y + corner_radius, corner_radius);
+        gfx_FillCircle(x + bar_width - corner_radius - 1, y + corner_radius, corner_radius);
+        // Wide rectangle to ensure no gaps between circles and full coverage
+        gfx_FillRectangle(x + corner_radius - 1, y, bar_width - 2 * corner_radius + 3, corner_radius + 1);
 
         // Draw outline with smooth arcs for rounded corners
         gfx_SetColor(bar_outline_colors[i % 6]);  // Cycle through outline colors
