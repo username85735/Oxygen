@@ -425,8 +425,9 @@ static void oxy_FreeWidgetByType(struct oxy_widget_t **widget, uint8_t type)
 	}
 	break;
 
-	
+
 	case OXY_WINDOW_TYPE:
+	{
 		struct oxy_window_t *window = (struct oxy_window_t *)widget;
 
 		/* Free Windows Buttons */
@@ -449,6 +450,7 @@ static void oxy_FreeWidgetByType(struct oxy_widget_t **widget, uint8_t type)
 		}
 
 		break;
+	}
 
 	default:
 		break;
