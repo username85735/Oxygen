@@ -57,7 +57,9 @@ static void draw_chart_frame(void)
         uint8_t value = (5 - i) * 20;
         uint8_t y = CHART_Y + (CHART_HEIGHT * i) / 5;
         sprintf(buffer, "%d", value);
-        gfx_PrintStringXY(buffer, CHART_X - 18, y - 4);
+        // Adjust x position based on number of digits
+        uint8_t label_x = (value == 100) ? CHART_X - 24 : CHART_X - 16;
+        gfx_PrintStringXY(buffer, label_x, y - 4);
     }
 }
 
@@ -72,13 +74,30 @@ static void draw_bars(void)
         uint8_t bar_height = (data[i] * CHART_HEIGHT) / max_value;
         uint8_t y = CHART_Y + CHART_HEIGHT - bar_height;
 
-        // Draw bar with rounded top
+        // Draw bar with rounded top and flat bottom
+        uint8_t corner_radius = 3;
+
+        // Fill main rectangle (flat bottom)
         gfx_SetColor(COLOR_BAR_FILL);
-        oxy_FillRoundRectangle(x, y, bar_width, bar_height, 3);
+        gfx_FillRectangle(x, y + corner_radius, bar_width, bar_height - corner_radius);
+
+        // Fill rounded top
+        gfx_FillCircle(x + corner_radius, y + corner_radius, corner_radius);
+        gfx_FillCircle(x + bar_width - corner_radius - 1, y + corner_radius, corner_radius);
+        gfx_FillRectangle(x + corner_radius, y, bar_width - 2 * corner_radius, corner_radius);
 
         // Draw outline for crisp look
         gfx_SetColor(COLOR_BAR_OUTLINE);
-        oxy_RoundRectangle(x, y, bar_width, bar_height, 3);
+        // Top rounded corners
+        gfx_Circle(x + corner_radius, y + corner_radius, corner_radius);
+        gfx_Circle(x + bar_width - corner_radius - 1, y + corner_radius, corner_radius);
+        // Top line
+        gfx_HorizLine(x + corner_radius, y, bar_width - 2 * corner_radius);
+        // Side lines
+        gfx_VertLine(x, y + corner_radius, bar_height - corner_radius);
+        gfx_VertLine(x + bar_width - 1, y + corner_radius, bar_height - corner_radius);
+        // Bottom line (flat)
+        gfx_HorizLine(x, y + bar_height - 1, bar_width);
 
         // Draw value on top of bar
         char value_str[4];
