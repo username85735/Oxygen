@@ -94,14 +94,22 @@ static void draw_bars(void)
         // Draw bar with rounded top and flat bottom
         uint8_t corner_radius = 4;
 
+        // Handle small bars that are shorter than the corner radius
+        if (bar_height <= corner_radius) {
+            corner_radius = bar_height - 1;
+            if (corner_radius < 1) corner_radius = 1;
+        }
+
         // Fill main rectangle (flat bottom)
         gfx_SetColor(bar_colors[i]);
-        gfx_FillRectangle(x, y + corner_radius, bar_width, bar_height - corner_radius);
+        if (bar_height > corner_radius) {
+            gfx_FillRectangle(x, y + corner_radius, bar_width, bar_height - corner_radius);
+        }
 
         // Fill rounded top
         gfx_FillCircle(x + corner_radius, y + corner_radius, corner_radius);
         gfx_FillCircle(x + bar_width - corner_radius - 1, y + corner_radius, corner_radius);
-        gfx_FillRectangle(x + corner_radius, y, bar_width - 2 * corner_radius, corner_radius + 1);
+        gfx_FillRectangle(x + corner_radius, y, bar_width - 2 * corner_radius, corner_radius);
 
         // Draw outline with smooth arcs for rounded corners
         gfx_SetColor(bar_outline_colors[i]);
@@ -113,11 +121,13 @@ static void draw_bars(void)
         oxy_Arc(x + bar_width - corner_radius - 1, y + corner_radius, corner_radius, 270, 360);
 
         // Top line (between the arcs)
-        gfx_HorizLine(x + corner_radius, y, bar_width - 2 * corner_radius - 1);
+        gfx_HorizLine(x + corner_radius + 1, y, bar_width - 2 * corner_radius - 2);
 
-        // Side lines
-        gfx_VertLine(x, y + corner_radius, bar_height - corner_radius);
-        gfx_VertLine(x + bar_width - 1, y + corner_radius, bar_height - corner_radius);
+        // Side lines (only draw if bar extends below the rounded top)
+        if (bar_height > corner_radius) {
+            gfx_VertLine(x, y + corner_radius, bar_height - corner_radius);
+            gfx_VertLine(x + bar_width - 1, y + corner_radius, bar_height - corner_radius);
+        }
 
         // Bottom line (flat)
         gfx_HorizLine(x, y + bar_height - 1, bar_width);
