@@ -174,23 +174,23 @@ int main(void)
     while (!(kb_Data[6] & kb_Clear)) {
         kb_Scan();
 
-        // Handle + key (add bar)
-        if (kb_Data[4] & kb_Add) {
+        // Handle + key (add bar) - using kb_IsDown for reliability
+        if (kb_IsDown(kb_KeyAdd)) {
             if (num_bars < MAX_BARS) {
                 num_bars++;
                 needs_redraw = true;
                 // Wait for key release
-                while (kb_Data[4] & kb_Add) kb_Scan();
+                while (kb_IsDown(kb_KeyAdd)) kb_Scan();
             }
         }
 
         // Handle - key (remove bar)
-        if (kb_Data[4] & kb_Sub) {
+        if (kb_IsDown(kb_KeySub)) {
             if (num_bars > 1) {
                 num_bars--;
                 needs_redraw = true;
                 // Wait for key release
-                while (kb_Data[4] & kb_Sub) kb_Scan();
+                while (kb_IsDown(kb_KeySub)) kb_Scan();
             }
         }
 
