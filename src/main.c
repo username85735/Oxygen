@@ -175,22 +175,22 @@ int main(void)
         kb_Scan();
 
         // Handle + key (add bar)
-        if (kb_Data[3] & kb_Add) {
+        if (kb_Data[4] & kb_Add) {
             if (num_bars < MAX_BARS) {
                 num_bars++;
                 needs_redraw = true;
                 // Wait for key release
-                while (kb_Data[3] & kb_Add) kb_Scan();
+                while (kb_Data[4] & kb_Add) kb_Scan();
             }
         }
 
         // Handle - key (remove bar)
-        if (kb_Data[3] & kb_Sub) {
+        if (kb_Data[4] & kb_Sub) {
             if (num_bars > 1) {
                 num_bars--;
                 needs_redraw = true;
                 // Wait for key release
-                while (kb_Data[3] & kb_Sub) kb_Scan();
+                while (kb_Data[4] & kb_Sub) kb_Scan();
             }
         }
 
