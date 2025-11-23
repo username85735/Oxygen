@@ -3,13 +3,15 @@
 #include <keypadc.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "oxygen/oxygen.h"
 
-// Hard-coded chart data
-#define NUM_BARS 6
-static const char *labels[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun"};
-static const uint8_t data[] = {45, 72, 38, 91, 55, 68};
+// Chart data (now dynamic!)
+#define MAX_BARS 12
+static uint8_t num_bars = 6;
+static char labels[MAX_BARS][4] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+static uint8_t data[MAX_BARS] = {45, 72, 38, 91, 55, 68, 60, 82, 48, 75, 65, 88};
 
 // Chart dimensions
 #define CHART_X 30
@@ -82,10 +84,10 @@ static void draw_chart_frame(void)
 
 static void draw_bars(void)
 {
-    uint8_t bar_width = (CHART_WIDTH - BAR_SPACING * (NUM_BARS + 1)) / NUM_BARS;
+    uint8_t bar_width = (CHART_WIDTH - BAR_SPACING * (num_bars + 1)) / num_bars;
     uint8_t max_value = 100;
 
-    for (uint8_t i = 0; i < NUM_BARS; i++) {
+    for (uint8_t i = 0; i < num_bars; i++) {
         // Calculate bar dimensions
         uint16_t x = CHART_X + BAR_SPACING * (i + 1) + bar_width * i;
         uint8_t bar_height = (data[i] * CHART_HEIGHT) / max_value;
@@ -101,7 +103,7 @@ static void draw_bars(void)
         }
 
         // Fill main rectangle (flat bottom)
-        gfx_SetColor(bar_colors[i]);
+        gfx_SetColor(bar_colors[i % 6]);  // Cycle through colors
         if (bar_height > corner_radius) {
             gfx_FillRectangle(x, y + corner_radius, bar_width, bar_height - corner_radius);
         }
@@ -112,7 +114,7 @@ static void draw_bars(void)
         gfx_FillRectangle(x + corner_radius, y, bar_width - 2 * corner_radius, corner_radius);
 
         // Draw outline with smooth arcs for rounded corners
-        gfx_SetColor(bar_outline_colors[i]);
+        gfx_SetColor(bar_outline_colors[i % 6]);  // Cycle through outline colors
 
         // Left rounded corner arc (top-left quarter circle)
         oxy_Arc(x + corner_radius, y + corner_radius, corner_radius, 180, 270);
@@ -154,32 +156,59 @@ static void draw_bars(void)
 
 static void draw_legend(void)
 {
-    // Draw a simple legend
+    // Draw interactive controls
     gfx_SetTextFGColor(COLOR_LABEL);
     gfx_SetTextBGColor(COLOR_BACKGROUND);
-    gfx_PrintStringXY("Press [CLEAR] to exit", 10, LCD_HEIGHT - 12);
+    gfx_PrintStringXY("[+] Add  [-] Remove  [CLEAR] Exit", 10, LCD_HEIGHT - 12);
 }
 
 int main(void)
 {
+    bool needs_redraw = true;
+
     // Initialize graphics
     gfx_Begin();
     gfx_SetDrawBuffer();
 
-    // Clear screen with background color
-    gfx_FillScreen(COLOR_BACKGROUND);
-
-    // Draw chart components
-    draw_chart_frame();
-    draw_bars();
-    draw_legend();
-
-    // Swap buffer to display
-    gfx_SwapDraw();
-
-    // Wait for user to press CLEAR
+    // Main event loop
     while (!(kb_Data[6] & kb_Clear)) {
         kb_Scan();
+
+        // Handle + key (add bar)
+        if (kb_Data[3] & kb_Add) {
+            if (num_bars < MAX_BARS) {
+                num_bars++;
+                needs_redraw = true;
+                // Wait for key release
+                while (kb_Data[3] & kb_Add) kb_Scan();
+            }
+        }
+
+        // Handle - key (remove bar)
+        if (kb_Data[3] & kb_Sub) {
+            if (num_bars > 1) {
+                num_bars--;
+                needs_redraw = true;
+                // Wait for key release
+                while (kb_Data[3] & kb_Sub) kb_Scan();
+            }
+        }
+
+        // Redraw chart if needed
+        if (needs_redraw) {
+            // Clear screen with background color
+            gfx_FillScreen(COLOR_BACKGROUND);
+
+            // Draw chart components
+            draw_chart_frame();
+            draw_bars();
+            draw_legend();
+
+            // Swap buffer to display
+            gfx_SwapDraw();
+
+            needs_redraw = false;
+        }
     }
 
     // Clean up
