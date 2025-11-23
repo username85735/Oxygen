@@ -217,7 +217,7 @@ static void oxy_UpdateString(void)
 			{
 				oxy_stringinput.charsamount--;
 				oxy_stringinput.text[oxy_stringinput.charsamount - 1] = '\0';
-				// 	}
+				}
 
 				// Clear or exit text input
 				if (skKey == sk_Clear)
@@ -281,122 +281,123 @@ static void oxy_UpdateString(void)
 					else
 						oxy_stringinput.type++;
 
-					// 	}
-
-					oxy_stringinput.text[oxy_stringinput.charsamount - 1] = '\0';
-				}
-
-				char *oxy_StringInput(const char title[], uint16_t x, uint8_t y, uint8_t maxchar)
-				{
-					char temp[2] = "";
-					uint8_t color = gfx_SetTextBGColor(0); // Get previous color
-					oxy_stringinput.max_char = maxchar;
-
-					// Prepare the string for input
-					oxy_ResetStringInput();
-
-					// Used for background color matching
-					gfx_SetTextBGColor(color);
-					gfx_SetColor(color); // Set background to current previous color
-
-					kb_Scan();
-
-					while (!(kb_Data[6] & kb_Enter) && !oxy_stringinput.forced_exit && !oxy_stringinput.function_check_result)
-					{
-						oxy_UpdateString();
-
-						kb_Scan();
-
-						switch (oxy_stringinput.type)
-						{
-						case 0:
-							temp[0] = 'A';
-							break;
-
-						case 1:
-							temp[0] = 'a';
-							break;
-
-						case 2:
-							temp[0] = '1';
-							break;
-						}
-
-						/* Rendering inputted text */
-						gfx_FillRectangle(x + gfx_GetStringWidth(title), y, gfx_GetStringWidth(oxy_stringinput.text) + 10, 9); // Text buffer.
-
-						gfx_SetTextXY(x, y);
-
-						if (title != NULL)
-							gfx_PrintString(title);
-
-						gfx_PrintString(oxy_stringinput.text); // Text printed here.
-
-						if (randInt(0, 1))
-							gfx_PrintString("|"); // Randomly printing cursor.
-
-						/* Rendering text type */
-						gfx_FillRectangle(LCD_WIDTH - (gfx_GetStringWidth(&temp[0]) + 2), 1, 10, 9);
-						gfx_PrintStringXY(&temp[0], LCD_WIDTH - (gfx_GetStringWidth(&temp[0]) + 1), 1); // Text type printed here.
-
-						gfx_Blit(1);
-
-						gfx_FillRectangle(x + gfx_GetStringWidth(title), y, gfx_GetStringWidth(oxy_stringinput.text) + 10, 9); // Text buffer.
 					}
 
-					/* Removing Cursor */
-					gfx_FillRectangle(x + gfx_GetStringWidth(title), y, gfx_GetStringWidth(oxy_stringinput.text) + gfx_GetStringWidth("|"), 9);
-					gfx_Blit(1);
+				oxy_stringinput.text[oxy_stringinput.charsamount - 1] = '\0';
+				}
 
-					return oxy_stringinput.text;
+}
+char *oxy_StringInput(const char title[], uint16_t x, uint8_t y, uint8_t maxchar)
+{
+	char temp[2] = "";
+	uint8_t color = gfx_SetTextBGColor(0); // Get previous color
+	oxy_stringinput.max_char = maxchar;
+
+	// Prepare the string for input
+	oxy_ResetStringInput();
+
+	// Used for background color matching
+	gfx_SetTextBGColor(color);
+	gfx_SetColor(color); // Set background to current previous color
+
+	kb_Scan();
+
+	while (!(kb_Data[6] & kb_Enter) && !oxy_stringinput.forced_exit && !oxy_stringinput.function_check_result)
+	{
+	oxy_UpdateString();
+
+	kb_Scan();
+
+	switch (oxy_stringinput.type)
+	{
+	case 0:
+	temp[0] = 'A';
+	break;
+
+	case 1:
+	temp[0] = 'a';
+	break;
+
+	case 2:
+	temp[0] = '1';
+	break;
+	}
+
+	/* Rendering inputted text */
+	gfx_FillRectangle(x + gfx_GetStringWidth(title), y, gfx_GetStringWidth(oxy_stringinput.text) + 10, 9); // Text buffer.
+
+	gfx_SetTextXY(x, y);
+
+	if (title != NULL)
+	gfx_PrintString(title);
+
+	gfx_PrintString(oxy_stringinput.text); // Text printed here.
+
+	if (randInt(0, 1))
+	gfx_PrintString("|"); // Randomly printing cursor.
+
+	/* Rendering text type */
+	gfx_FillRectangle(LCD_WIDTH - (gfx_GetStringWidth(&temp[0]) + 2), 1, 10, 9);
+	gfx_PrintStringXY(&temp[0], LCD_WIDTH - (gfx_GetStringWidth(&temp[0]) + 1), 1); // Text type printed here.
+
+	gfx_Blit(1);
+
+	gfx_FillRectangle(x + gfx_GetStringWidth(title), y, gfx_GetStringWidth(oxy_stringinput.text) + 10, 9); // Text buffer.
+	}
+
+	/* Removing Cursor */
+	gfx_FillRectangle(x + gfx_GetStringWidth(title), y, gfx_GetStringWidth(oxy_stringinput.text) + gfx_GetStringWidth("|"), 9);
+	gfx_Blit(1);
+
+	return oxy_stringinput.text;
 				}
 
 				void oxy_Dialogue(const char *title, char *message, struct oxy_button_t **buttons)
 				{
-					const int width = 110;
-					const int height = 90;
-					const uint8_t titlewidth = 12;
-					const uint8_t padding = 3;
-					const uint8_t numlines = 7;
+	const int width = 110;
+	const int height = 90;
+	const uint8_t titlewidth = 12;
+	const uint8_t padding = 3;
+	const uint8_t numlines = 7;
 
-					uint8_t xprint = 160 - (100 + 2 * padding) / 2;
-					uint8_t yprint;
+	uint8_t xprint = 160 - (100 + 2 * padding) / 2;
+	uint8_t yprint;
 
-					// Print with title
-					if (title)
-					{
-						yprint = 120 - (height + 13) / 2;
-						// oxy_CenteredWindow(title, width, height);
-						oxy_PrintWordWrap(message, xprint + 2 * padding, yprint + titlewidth + 1, width, numlines, 0);
-					}
-					else
-					{ // Print with no title
-						yprint = 120 - (numlines * 3 + titlewidth + 2 * padding) / 2;
-						oxy_FillRoundRectangle(xprint, yprint, width, height, 0);
-						oxy_PrintWordWrap(message, xprint + 2 * padding, yprint + titlewidth + padding + 1, width, numlines, 0);
-					}
+	// Print with title
+	if (title)
+	{
+	yprint = 120 - (height + 13) / 2;
+	// oxy_CenteredWindow(title, width, height);
+	oxy_PrintWordWrap(message, xprint + 2 * padding, yprint + titlewidth + 1, width, numlines, 0);
+	}
+	else
+	{ // Print with no title
+	yprint = 120 - (numlines * 3 + titlewidth + 2 * padding) / 2;
+	oxy_FillRoundRectangle(xprint, yprint, width, height, 0);
+	oxy_PrintWordWrap(message, xprint + 2 * padding, yprint + titlewidth + padding + 1, width, numlines, 0);
+	}
 
-					// Display the buttons here
+	// Display the buttons here
 				}
 
 				uint8_t oxy_ColorPicker(uint8_t cur_select, uint16_t x, uint8_t y)
 				{
-					uint8_t color = cur_select;
-					uint8_t count = 0;
+	uint8_t color = cur_select;
+	uint8_t count = 0;
 
-					// Start double buffer
-					gfx_sprite_t *back_buff = gfx_MallocSprite(8 * 64, 8 * 8);
-					gfx_GetSprite(back_buff, x, y);
+	// Start double buffer
+	gfx_sprite_t *back_buff = gfx_MallocSprite(8 * 64, 8 * 8);
+	gfx_GetSprite(back_buff, x, y);
 
-					while (!((kb_Data[6] & kb_Enter) || (kb_Data[1] & kb_2nd) || (kb_Data[6] & kb_Clear)))
-					{
-						kb_Scan();
-						// keys!
-						switch (kb_Data[7])
-						{
-						case kb_Up:
-							color -= 32;
-							break;
+	while (!((kb_Data[6] & kb_Enter) || (kb_Data[1] & kb_2nd) || (kb_Data[6] & kb_Clear)))
+	{
+	kb_Scan();
+	// keys!
+	switch (kb_Data[7])
+	{
+	case kb_Up:
+	color -= 32;
+	break;
 
 						case kb_Down:
 							color += 32;
