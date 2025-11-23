@@ -169,7 +169,7 @@ static void draw_legend(void)
     // Draw interactive controls
     gfx_SetTextFGColor(COLOR_LABEL);
     gfx_SetTextBGColor(COLOR_BACKGROUND);
-    gfx_PrintStringXY("[+] Add  [-] Remove  [CLEAR] Exit", 10, LCD_HEIGHT - 12);
+    gfx_PrintStringXY("[+] Add  [(-)] Remove  [CLEAR] Exit", 10, LCD_HEIGHT - 12);
 }
 
 int main(void)
