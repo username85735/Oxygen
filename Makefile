@@ -2,9 +2,9 @@
 # Program Options
 # ----------------------------
 
-NAME         ?= PIECHART
+NAME         ?= MATHSUIT
 ICON         ?= icon.png
-DESCRIPTION  ?= "Pie Chart Demo"
+DESCRIPTION  ?= "MAT142 Exam Suite"
 COMPRESSED   ?= YES
 ARCHIVED     ?= NO
 
