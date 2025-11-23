@@ -14,7 +14,7 @@ Beautiful chart visualizations for the TI-84 Plus CE calculator using the Oxygen
   - CLEAR: Exit
 
 ### 2. Bar Chart
-- **File**: `src/demos/barchart.c`
+- **File**: `demos/barchart.c`
 - **Features**:
   - Rounded-top bars with pastel colors
   - Smart label positioning with staggering
@@ -25,13 +25,13 @@ Beautiful chart visualizations for the TI-84 Plus CE calculator using the Oxygen
 
 ## Building
 
-To build the **Pie Chart**:
+To build the **Pie Chart** (current):
 ```bash
 make clean && make
 ```
 
 To build the **Bar Chart** instead:
-1. Move files: `mv src/piechart.c src/demos/ && mv src/demos/barchart.c src/`
+1. Move files: `mv src/piechart.c demos/ && mv demos/barchart.c src/`
 2. Update Makefile: Change `NAME ?= PIECHART` to `NAME ?= BARCHART`
 3. Update Makefile: Change description to `"Bar Chart Demo"`
 4. Build: `make clean && make`
