@@ -18,6 +18,9 @@
 #include "elements/entry.h"
 #include "elements/window.h"
 
+// Forward declaration
+bool oxy_FreeWidget(struct oxy_widget_t **widget);
+
 void oxy_SetWidgetDescription(struct oxy_widget_t *widget, char *text)
 {
 	widget->cursor_info.description = text;
