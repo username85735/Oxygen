@@ -59,11 +59,16 @@ static void randomize_data(void)
 
 static void draw_zigzag(uint16_t x, uint8_t y, uint8_t width)
 {
-    // Draw zigzag axis break indicator
+    // Draw zigzag axis break indicator (proper zigzag pattern)
     gfx_SetColor(COLOR_AXIS);
-    for (uint8_t i = 0; i < width; i += 4) {
-        gfx_Line(x + i, y, x + i + 2, y + 3);
-        gfx_Line(x + i + 2, y + 3, x + i + 4, y);
+    uint8_t step = 0;
+    for (uint8_t i = 0; i < width; i += 2) {
+        if (step % 2 == 0) {
+            gfx_Line(x + i, y, x + i + 2, y + 4);  // Down-right
+        } else {
+            gfx_Line(x + i, y + 4, x + i + 2, y);  // Up-right
+        }
+        step++;
     }
 }
 
@@ -215,6 +220,11 @@ static void draw_bars(void)
         } else {
             label_y = CHART_Y + CHART_HEIGHT + 5;
         }
+
+        // Draw guide line from x-axis to label
+        gfx_SetColor(COLOR_GRID);
+        uint16_t bar_center = x + bar_width / 2;
+        gfx_VertLine(bar_center, CHART_Y + CHART_HEIGHT + 1, label_y - (CHART_Y + CHART_HEIGHT + 1) - 1);
 
         gfx_PrintStringXY(labels[i], (uint16_t)label_x, label_y);
     }
