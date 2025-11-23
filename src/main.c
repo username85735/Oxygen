@@ -185,12 +185,12 @@ int main(void)
         }
 
         // Handle - key (remove bar)
-        if (kb_IsDown(kb_KeySub)) {
+        if (kb_Data[1] & kb_Sub) {
             if (num_bars > 1) {
                 num_bars--;
                 needs_redraw = true;
                 // Wait for key release
-                while (kb_IsDown(kb_KeySub)) kb_Scan();
+                while (kb_Data[1] & kb_Sub) kb_Scan();
             }
         }
 
