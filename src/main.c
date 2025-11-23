@@ -102,34 +102,34 @@ static void draw_bars(void)
             if (corner_radius < 1) corner_radius = 1;
         }
 
-        // Fill main rectangle (flat bottom)
-        gfx_SetColor(bar_colors[i % 6]);  // Cycle through colors
-        if (bar_height > corner_radius) {
-            gfx_FillRectangle(x, y + corner_radius, bar_width, bar_height - corner_radius);
-        }
+        // STEP 1: Draw outline FIRST (forms the border)
+        gfx_SetColor(bar_outline_colors[i % 6]);
 
-        // Fill rounded top - use full radius to ensure complete coverage under outline
-        gfx_FillCircle(x + corner_radius, y + corner_radius, corner_radius);
-        gfx_FillCircle(x + bar_width - corner_radius - 1, y + corner_radius, corner_radius);
-        // Wide rectangle to ensure no gaps between circles and full coverage
-        gfx_FillRectangle(x + corner_radius - 1, y, bar_width - 2 * corner_radius + 3, corner_radius + 1);
-
-        // Draw outline with smooth arcs for rounded corners
-        gfx_SetColor(bar_outline_colors[i % 6]);  // Cycle through outline colors
-
-        // Left rounded corner arc (top-left quarter circle)
+        // Draw arc outlines
         oxy_Arc(x + corner_radius, y + corner_radius, corner_radius, 180, 270);
-
-        // Right rounded corner arc (top-right quarter circle)
         oxy_Arc(x + bar_width - corner_radius - 1, y + corner_radius, corner_radius, 270, 360);
 
-        // Top line (between the arcs) - adjusted to connect precisely
+        // Draw straight edge outlines
         gfx_HorizLine(x + corner_radius, y, bar_width - 2 * corner_radius);
-
-        // Side lines (only draw if bar extends below the rounded top)
         if (bar_height > corner_radius) {
             gfx_VertLine(x, y + corner_radius, bar_height - corner_radius);
             gfx_VertLine(x + bar_width - 1, y + corner_radius, bar_height - corner_radius);
+        }
+
+        // STEP 2: Fill INSIDE the outline (1px smaller radius)
+        gfx_SetColor(bar_colors[i % 6]);
+
+        // Main rectangle body
+        if (bar_height > corner_radius) {
+            gfx_FillRectangle(x + 1, y + corner_radius, bar_width - 2, bar_height - corner_radius);
+        }
+
+        // Fill rounded top area - use radius-1 to stay inside outline
+        uint8_t fill_radius = (corner_radius > 1) ? corner_radius - 1 : 0;
+        if (fill_radius > 0) {
+            gfx_FillCircle(x + corner_radius, y + corner_radius, fill_radius);
+            gfx_FillCircle(x + bar_width - corner_radius - 1, y + corner_radius, fill_radius);
+            gfx_FillRectangle(x + corner_radius, y + 1, bar_width - 2 * corner_radius, fill_radius);
         }
 
         // No bottom line - it would overlap with x-axis creating double thickness
