@@ -153,7 +153,6 @@ static int selected_option = 0;
 // Input buffers
 static char input_buffer[32];
 static int input_index = 0;
-static bool input_active = false;
 
 // Normal distribution state
 static float norm_mu = 0.0f;
@@ -190,6 +189,8 @@ static void draw_main_menu(void) {
     gfx_SetTextFGColor(COLOR_TEXT);
     gfx_SetTextTransparentColor(COLOR_BG);
 
+    gfx_PrintStringXY("Problem Solver - Enter values to calculate", MARGIN, 25);
+
     const char *options[] = {
         "1. Normal Distribution Solver",
         "2. Probability & Set Logic",
@@ -197,7 +198,7 @@ static void draw_main_menu(void) {
         "CLEAR: Exit"
     };
 
-    int y = 40;
+    int y = 45;
     for (int i = 0; i < 4; i++) {
         if (i == selected_option) {
             gfx_SetColor(COLOR_INPUT);
@@ -488,7 +489,7 @@ static float get_numeric_input(const char *prompt, float default_val) {
         }
 
         // Number keys
-        if (kb_Data[kb_group_1] || kb_Data[kb_group_2]) {
+        if (kb_Data[1] || kb_Data[2]) {
             char key = '\0';
             if (kb_IsDown(kb_Key0)) key = '0';
             if (kb_IsDown(kb_Key1)) key = '1';
@@ -528,15 +529,8 @@ int main(void) {
     gfx_Begin();
     gfx_SetDrawBuffer();
 
-    // Initial values
-    norm_mu = 50.0f;
-    norm_sigma = 10.0f;
-    norm_x = 60.0f;
-    prob_a = 0.3f;
-    prob_b = 0.4f;
-    prob_ab = 0.1f;
-    count_n = 10;
-    count_r = 3;
+    // Start with blank/default values
+    // Note: norm_sigma starts at 1.0 (declared at top) to avoid division by zero
 
     draw_current_menu();
     gfx_SwapDraw();
