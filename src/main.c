@@ -149,7 +149,18 @@ static void draw_bars(void)
 
         // Draw X-axis label with smart positioning to avoid overlap
         uint8_t label_width = strlen(labels[i]) * 8;
-        uint8_t label_x = x + (bar_width - label_width) / 2;
+
+        // Use signed int to prevent underflow when bar_width < label_width
+        int16_t label_x;
+        if (bar_width >= label_width) {
+            label_x = x + (bar_width - label_width) / 2;
+        } else {
+            // Bar is narrower than label, center on bar position
+            label_x = x + bar_width / 2 - label_width / 2;
+        }
+
+        // Ensure label doesn't go off left edge
+        if (label_x < 0) label_x = 0;
 
         // If bars are crowded (more than 8), use alternating vertical positions
         uint8_t label_y;
@@ -160,7 +171,7 @@ static void draw_bars(void)
             label_y = CHART_Y + CHART_HEIGHT + 5;
         }
 
-        gfx_PrintStringXY(labels[i], label_x, label_y);
+        gfx_PrintStringXY(labels[i], (uint16_t)label_x, label_y);
     }
 }
 
