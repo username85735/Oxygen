@@ -147,10 +147,20 @@ static void draw_bars(void)
             gfx_PrintStringXY(value_str, x + (bar_width - text_width) / 2, y + 2);
         }
 
-        // Draw X-axis label
+        // Draw X-axis label with smart positioning to avoid overlap
         uint8_t label_width = strlen(labels[i]) * 8;
-        gfx_PrintStringXY(labels[i], x + (bar_width - label_width) / 2,
-                         CHART_Y + CHART_HEIGHT + 5);
+        uint8_t label_x = x + (bar_width - label_width) / 2;
+
+        // If bars are crowded (more than 8), use alternating vertical positions
+        uint8_t label_y;
+        if (num_bars > 8) {
+            // Alternate labels up and down for diagonal effect
+            label_y = CHART_Y + CHART_HEIGHT + 5 + ((i % 2) * 10);
+        } else {
+            label_y = CHART_Y + CHART_HEIGHT + 5;
+        }
+
+        gfx_PrintStringXY(labels[i], label_x, label_y);
     }
 }
 
@@ -184,13 +194,13 @@ int main(void)
             }
         }
 
-        // Handle - key (remove bar)
-        if (kb_Data[1] & kb_Sub) {
+        // Handle - key (remove bar) - trying negative key
+        if (kb_IsDown(kb_KeyChs)) {
             if (num_bars > 1) {
                 num_bars--;
                 needs_redraw = true;
                 // Wait for key release
-                while (kb_Data[1] & kb_Sub) kb_Scan();
+                while (kb_IsDown(kb_KeyChs)) kb_Scan();
             }
         }
 
