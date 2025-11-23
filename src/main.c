@@ -131,8 +131,7 @@ static void draw_bars(void)
             gfx_VertLine(x + bar_width - 1, y + corner_radius, bar_height - corner_radius);
         }
 
-        // Bottom line (flat)
-        gfx_HorizLine(x, y + bar_height - 1, bar_width);
+        // No bottom line - it would overlap with x-axis creating double thickness
 
         // Draw value on top of bar
         char value_str[4];
