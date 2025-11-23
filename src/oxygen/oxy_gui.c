@@ -115,9 +115,9 @@ static void oxy_ResetStringInput(void)
 
 	// Creates a cursor (Should reset it later on!).
 	gfx_SetCharData('|', (uint8_t[]){0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0x00});
-	// }
+}
 
-	static void oxy_UpdateString(void)
+static void oxy_UpdateString(void)
 	{
 		const char *keys[3] = {"\0\0\0\0\0\0\0\0\0\0\0WRMH\0\0?\0VQLG\0\0.ZUPKFC\0 YTOJEB\0\0XSNIDA\0\0\0\0\0\0\0\0\0",
 							   "\0\0\0\0\0\0\0\0\0\0\0wrmh\0\0?\0vqlg\0\0.zupkfc\0 ytojeb\0\0xsnida\0\0\0\0\0\0\0\0\0",
